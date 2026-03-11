@@ -4,7 +4,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const MAX_TEAM = 5;
 const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th"];
-const DOMAIN_OPTIONS = ["Web / Mobile", "AI / ML", "Hardware / IoT", "Social Impact"];
+const DOMAIN_OPTIONS = ["Web / Mobile", "AI / ML", "Hardware / IoT", "Social Impact", "Other"];
 
 const GFORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGXUgo5qR7C3mvHb8K7yGRWiwzBLh8Rd2B6onzgDnDKsWT4Q/viewform";
 
