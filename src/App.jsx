@@ -14,7 +14,7 @@ function buildFormURL(teamName, ideaTitle, leaderName) {
     "entry.1045781291": ideaTitle,
     "entry.1065046570": leaderName,
   });
-  return ${GFORM_BASE}?usp=pp_url&${p.toString()};
+  return `${GFORM_BASE}?usp=pp_url&${p.toString()}`;
 }
 
 const styles = `
