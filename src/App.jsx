@@ -327,7 +327,7 @@ export default function App() {
       <style>{styles}</style>
 
       {/* ── Hero ── */}
-      <header className={hero${heroLoaded ? " loaded" : ""}}>
+      <header className={`hero${heroLoaded ? " loaded" : ""}`}>
         <div className="hero-inner">
           <div className="subtitle">AISSMS College of Engineering proudly organizes</div>
           <h1 className="title-outline">IDEATHON</h1>
