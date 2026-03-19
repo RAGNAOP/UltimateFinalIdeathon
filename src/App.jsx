@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-const MAX_TEAM = 5;
+const MAX_OTHER_MEMBERS = 3;
 const YEAR_OPTIONS = ["1st", "2nd", "3rd", "4th"];
 const DOMAIN_OPTIONS = ["Web / Mobile", "AI / ML", "Hardware / IoT", "Social Impact", "Other"];
 
@@ -14,7 +14,7 @@ function buildFormURL(teamName, ideaTitle, leaderName) {
     "entry.1045781291": ideaTitle,
     "entry.1065046570": leaderName,
   });
-  return `${GFORM_BASE}?usp=pp_url&${p.toString()}`;
+  return ${GFORM_BASE}?usp=pp_url&${p.toString()};
 }
 
 const styles = `
@@ -24,6 +24,7 @@ const styles = `
   html,body { height:100%; }
   body { font-family:'Sora',sans-serif; background:linear-gradient(180deg,#031726 0%,#071827 100%); color:#cfeaf5; min-height:100vh; }
 
+  /* ── Hero ── */
   .hero { padding:80px 20px 140px; text-align:center; position:relative; overflow:hidden; }
   .hero::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
     background: radial-gradient(circle at 50% 28%,rgba(255,255,255,0.10),rgba(255,255,255,0.02) 25%,transparent 40%),
@@ -57,6 +58,34 @@ const styles = `
   .hero.loaded .cta { opacity:1; }
   .cta:hover { transform:translateY(-2px); box-shadow:0 18px 54px rgba(29,176,255,0.38); }
 
+  /* ── About Section ── */
+  .about-section { max-width:900px; margin:0 auto 20px; padding:0 20px; }
+
+  .about-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:20px; }
+
+  .about-stat { background:linear-gradient(180deg,rgba(10,24,34,0.96),rgba(6,14,23,0.96));
+    border-radius:20px; padding:22px 20px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 30px rgba(2,8,14,0.6); text-align:center; }
+  .about-stat-icon { font-size:26px; margin-bottom:10px; }
+  .about-stat-value { font-family:'Orbitron',monospace; font-size:clamp(13px,2vw,16px);
+    font-weight:700; color:#fff; margin-bottom:4px; line-height:1.3; }
+  .about-stat-label { font-size:11px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; }
+
+  .about-desc { background:linear-gradient(180deg,rgba(10,24,34,0.96),rgba(6,14,23,0.96));
+    border-radius:20px; padding:24px 28px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 30px rgba(2,8,14,0.6); margin-top:14px; }
+  .about-desc p { font-size:14px; line-height:1.85; color:#9fd8e8; }
+  .about-desc p + p { margin-top:12px; }
+
+  .deadline-badge { display:inline-flex; align-items:center; gap:8px;
+    background:linear-gradient(90deg,rgba(255,100,80,0.12),rgba(255,60,60,0.06));
+    border:1px solid rgba(255,100,80,0.25); border-radius:40px; padding:8px 18px;
+    margin-top:18px; font-size:13px; font-weight:700; color:#ff8a7a; }
+  .deadline-dot { width:7px; height:7px; border-radius:50%; background:#ff5a5a;
+    animation:blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── Register Section ── */
   .register-section { max-width:900px; margin:0 auto; padding:0 20px 100px; }
   .section-title { text-align:center; font-family:'Orbitron',monospace; font-size:clamp(28px,5vw,46px); margin:0 0 28px; font-weight:700; }
   .section-title .accent { color:var(--accent-2); }
@@ -77,12 +106,14 @@ const styles = `
   .form-textarea { resize:vertical; }
   .two-cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
+  /* ── Members ── */
   .members-header { display:flex; justify-content:space-between; align-items:center; margin:18px 0 10px; }
   .members-label { font-weight:600; color:#cfeaf5; font-size:14px; }
   .members-controls { display:flex; align-items:center; gap:10px; }
   .member-info { color:#bfefff; font-weight:700; font-size:13px; }
   .btn-small { background:none; border:1px solid rgba(29,176,255,0.25); color:var(--accent-2); padding:7px 14px;
-    border-radius:8px; cursor:pointer; font-family:'Sora',sans-serif; font-size:13px; font-weight:600; transition:border-color 0.2s,background 0.2s; }
+    border-radius:8px; cursor:pointer; font-family:'Sora',sans-serif; font-size:13px; font-weight:600;
+    transition:border-color 0.2s,background 0.2s; }
   .btn-small:hover:not(:disabled) { background:rgba(29,176,255,0.08); border-color:var(--accent-2); }
   .btn-small:disabled { opacity:0.45; cursor:not-allowed; }
 
@@ -93,9 +124,14 @@ const styles = `
   @keyframes fadeInRow { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
 
   .btn-remove { background:#ff5a5a; border:none; color:#fff; border-radius:8px; cursor:pointer; padding:7px;
-    font-size:13px; font-weight:700; transition:background 0.2s; display:flex; align-items:center; justify-content:center; }
-  .btn-remove:hover { background:#ff3333; }
+    font-size:13px; font-weight:700; transition:background 0.2s,opacity 0.2s;
+    display:flex; align-items:center; justify-content:center; }
+  .btn-remove:hover:not(:disabled) { background:#ff3333; }
+  .btn-remove:disabled { opacity:0.25; cursor:not-allowed; background:#ff5a5a; }
 
+  .member-hint { font-size:11px; color:#5a8fa8; margin-top:6px; }
+
+  /* ── Actions ── */
   .form-actions { text-align:center; margin:32px 0 0; }
   .btn-submit { background:linear-gradient(90deg,var(--accent),#3fb1ff); padding:18px 48px; border-radius:28px;
     border:none; color:#fff; font-family:'Orbitron',monospace; font-weight:700; font-size:14px; letter-spacing:1px;
@@ -103,6 +139,7 @@ const styles = `
   .btn-submit:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 28px 90px rgba(29,176,255,0.35); }
   .btn-submit:disabled { opacity:0.6; cursor:not-allowed; }
 
+  /* ── Toast ── */
   .toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
     background:rgba(10,30,50,0.95); border:1px solid rgba(29,176,255,0.3); border-radius:16px;
     padding:16px 28px; color:#bfefff; font-size:14px; z-index:999; opacity:0;
@@ -150,8 +187,10 @@ const styles = `
     font-size:13px; cursor:pointer; transition:border-color 0.2s,color 0.2s; white-space:nowrap; }
   .btn-modal-secondary:hover { border-color:rgba(255,255,255,0.2); color:#cfeaf5; }
 
+  /* ── Responsive ── */
   @media(max-width:700px) {
     .two-cols{grid-template-columns:1fr}
+    .about-grid{grid-template-columns:1fr}
     .member-row{grid-template-columns:1fr 1fr}
     .modal-actions{flex-direction:column}
   }
@@ -160,7 +199,7 @@ const styles = `
 
 const emptyMember = () => ({ id: Date.now() + Math.random(), name: "", dept: "", year: "" });
 
-function MemberRow({ member, onUpdate, onRemove }) {
+function MemberRow({ member, onUpdate, onRemove, canRemove }) {
   return (
     <div className="member-row">
       <input className="form-input" placeholder="Member name" value={member.name}
@@ -172,14 +211,19 @@ function MemberRow({ member, onUpdate, onRemove }) {
         <option value="">Year</option>
         {YEAR_OPTIONS.map(y => <option key={y}>{y}</option>)}
       </select>
-      <button type="button" className="btn-remove" onClick={onRemove} title="Remove">✕</button>
+      <button
+        type="button"
+        className="btn-remove"
+        onClick={onRemove}
+        disabled={!canRemove}
+        title={canRemove ? "Remove member" : "Minimum 2 members required"}
+      >✕</button>
     </div>
   );
 }
 
 function SuccessModal({ teamName, ideaTitle, leaderName, onClose }) {
   const formURL = buildFormURL(teamName, ideaTitle, leaderName);
-
   return (
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
@@ -189,31 +233,20 @@ function SuccessModal({ teamName, ideaTitle, leaderName, onClose }) {
           Your team details are confirmed. Now upload your files via the form below —
           fields are already <strong>pre-filled</strong> for you.
         </div>
-
         <div className="modal-info">
-          <div className="modal-info-row">
-            <span>Team</span><span>{teamName}</span>
-          </div>
-          <div className="modal-info-row">
-            <span>Leader</span><span>{leaderName}</span>
-          </div>
-          <div className="modal-info-row">
-            <span>Idea</span><span>{ideaTitle}</span>
-          </div>
+          <div className="modal-info-row"><span>Team</span><span>{teamName}</span></div>
+          <div className="modal-info-row"><span>Leader</span><span>{leaderName}</span></div>
+          <div className="modal-info-row"><span>Idea</span><span>{ideaTitle}</span></div>
         </div>
-
         <div className="modal-note">
           📎 Upload your Pitch Deck and Wadwani Foundation Certificate in the Google Form.
           The link opens with your details pre-filled — just attach the files and submit.
         </div>
-
         <div className="modal-actions">
           <a className="btn-modal-primary" href={formURL} target="_blank" rel="noreferrer">
             <span>📤</span> Upload Files
           </a>
-          <button className="btn-modal-secondary" onClick={onClose}>
-            Skip for now
-          </button>
+          <button className="btn-modal-secondary" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
@@ -222,10 +255,10 @@ function SuccessModal({ teamName, ideaTitle, leaderName, onClose }) {
 
 export default function App() {
   const [heroLoaded, setHeroLoaded] = useState(false);
-  const [members, setMembers] = useState([emptyMember(), emptyMember()]);
+  const [members, setMembers] = useState([emptyMember(), emptyMember()]); // min 2
   const [toast, setToast] = useState({ msg: "", type: "", show: false });
   const [submitting, setSubmitting] = useState(false);
-  const [modal, setModal] = useState(null); // { teamName, ideaTitle, leaderName }
+  const [modal, setModal] = useState(null);
   const registerRef = useRef(null);
   const [form, setForm] = useState({
     teamName: "", leaderName: "", leaderEmail: "",
@@ -243,56 +276,39 @@ export default function App() {
     setTimeout(() => setToast(t => ({ ...t, show: false })), 4000);
   };
 
-  const totalSize = 1 + members.length;
-  const isFull = totalSize >= MAX_TEAM;
+  // members.length = other members count (not including leader)
+  const isFull = members.length >= MAX_OTHER_MEMBERS;         // 4 others max
+  const canRemove = members.length > 1;                        // 2 others min
 
   const addMember = () => {
-    if (isFull) { showToast(`Team size limit reached (max ${MAX_TEAM} including leader).`, "error"); return; }
+    if (isFull) { showToast(Maximum ${MAX_OTHER_MEMBERS} other members allowed., "error"); return; }
     setMembers(m => [...m, emptyMember()]);
   };
 
   const updateMember = (id, updated) => setMembers(m => m.map(mb => mb.id === id ? updated : mb));
-  const removeMember = (id) => setMembers(m => m.filter(mb => mb.id !== id));
+  const removeMember = (id) => {
+    if (!canRemove) return;
+    setMembers(m => m.filter(mb => mb.id !== id));
+  };
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const required = [
-      "teamName","leaderName","leaderEmail","leaderPhone",
-      "leaderDept","year","ideaTitle","ideaDesc","domain"
-    ];
-
+    const required = ["teamName","leaderName","leaderEmail","leaderPhone","leaderDept","year","ideaTitle","ideaDesc","domain"];
     for (const key of required) {
-      if (!form[key].trim()) {
-        showToast("Please fill all required fields.", "error");
-        return;
-      }
+      if (!form[key].trim()) { showToast("Please fill all required fields.", "error"); return; }
     }
-
     setSubmitting(true);
-
     try {
       await addDoc(collection(db, "registrations"), {
         ...form,
         members,
         createdAt: serverTimestamp(),
       });
-
-      // Reset form
-      setForm({
-        teamName:"",leaderName:"",leaderEmail:"",leaderPhone:"",
-        leaderDept:"",year:"",ideaTitle:"",ideaDesc:"",domain:""
-      });
+      const saved = { teamName: form.teamName, ideaTitle: form.ideaTitle, leaderName: form.leaderName };
+      setForm({ teamName:"",leaderName:"",leaderEmail:"",leaderPhone:"",leaderDept:"",year:"",ideaTitle:"",ideaDesc:"",domain:"" });
       setMembers([emptyMember(), emptyMember()]);
-
-      // Show success modal with pre-fill data
-      setModal({
-        teamName: form.teamName,
-        ideaTitle: form.ideaTitle,
-        leaderName: form.leaderName,
-      });
-
+      setModal(saved);
     } catch (error) {
       showToast("Submission failed: " + error.message, "error");
     } finally {
@@ -310,8 +326,8 @@ export default function App() {
     <>
       <style>{styles}</style>
 
-      {/* Hero */}
-      <header className={`hero${heroLoaded ? " loaded" : ""}`}>
+      {/* ── Hero ── */}
+      <header className={hero${heroLoaded ? " loaded" : ""}}>
         <div className="hero-inner">
           <div className="subtitle">AISSMS College of Engineering proudly organizes</div>
           <h1 className="title-outline">IDEATHON</h1>
@@ -324,6 +340,49 @@ export default function App() {
       </header>
 
       <main>
+        {/* ── About the Competition ── */}
+        <section className="about-section">
+          <h2 className="section-title">About the <span className="accent">Competition</span></h2>
+
+          <div className="about-grid">
+            <div className="about-stat">
+              <div className="about-stat-icon">🎤</div>
+              <div className="about-stat-value">Pitch + Q&amp;A</div>
+              <div className="about-stat-label">Format</div>
+            </div>
+            <div className="about-stat">
+              <div className="about-stat-icon">💡</div>
+              <div className="about-stat-value">Any Domain</div>
+              <div className="about-stat-label">Tech or Non-Tech</div>
+            </div>
+            <div className="about-stat">
+              <div className="about-stat-icon">🚫</div>
+              <div className="about-stat-value">No Prototype</div>
+              <div className="about-stat-label">Required</div>
+            </div>
+          </div>
+
+          <div className="about-desc">
+            <p>
+              Ideathon 2026 is a pitch-based competition where participants present their innovative ideas
+              to a panel of judges through a well-structured presentation. The focus is on effectively
+              communicating your idea using a compelling PPT (pitch deck) — a working prototype is
+              <strong style={{color:"#bfefff"}}> not mandatory</strong>.
+            </p>
+            <p>
+              Following each pitch, there will be a <strong style={{color:"#bfefff"}}>Q&amp;A session</strong> where
+              judges evaluate the concept, feasibility, and clarity of thought. Participants are free to
+              choose ideas from <strong style={{color:"#bfefff"}}>any domain</strong> — technical or
+              non-technical — without restriction.
+            </p>
+            <div className="deadline-badge">
+              <span className="deadline-dot"></span>
+              Submission Deadline: 27th March 2026
+            </div>
+          </div>
+        </section>
+
+        {/* ── Registration Form ── */}
         <section id="register" className="register-section" ref={registerRef}>
           <h2 className="section-title">Register Your <span className="accent">Team</span></h2>
 
@@ -377,7 +436,7 @@ export default function App() {
               <div className="members-header">
                 <span className="members-label">Other Team Members</span>
                 <div className="members-controls">
-                  <span className="member-info">{totalSize} / {MAX_TEAM}</span>
+                  <span className="member-info">{members.length} / {MAX_OTHER_MEMBERS}</span>
                   <button type="button" className="btn-small" onClick={addMember} disabled={isFull}>
                     {isFull ? "✓ Full" : "+ Add Member"}
                   </button>
@@ -386,9 +445,14 @@ export default function App() {
 
               {members.map(mb => (
                 <MemberRow key={mb.id} member={mb}
+                  canRemove={canRemove}
                   onUpdate={updated => updateMember(mb.id, updated)}
                   onRemove={() => removeMember(mb.id)} />
               ))}
+
+              <p className="member-hint">
+                Min 1 · Max {MAX_OTHER_MEMBERS} other members (Excluding leader)
+              </p>
             </div>
 
             {/* Idea Details */}
@@ -423,7 +487,6 @@ export default function App() {
         </section>
       </main>
 
-      {/* Success Modal */}
       {modal && (
         <SuccessModal
           teamName={modal.teamName}
@@ -433,8 +496,7 @@ export default function App() {
         />
       )}
 
-      {/* Toast */}
-      <div className={`toast ${toast.type}${toast.show ? " show" : ""}`}>{toast.msg}</div>
+      <div className={toast ${toast.type}${toast.show ? " show" : ""}}>{toast.msg}</div>
     </>
   );
 }
