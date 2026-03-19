@@ -496,7 +496,7 @@ export default function App() {
         />
       )}
 
-      <div className={toast ${toast.type}${toast.show ? " show" : ""}}>{toast.msg}</div>
+      <div className={`toast ${toast.type}${toast.show ? " show" : ""}`}>{toast.msg}</div>
     </>
   );
 }
