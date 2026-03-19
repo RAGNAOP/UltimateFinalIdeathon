@@ -246,7 +246,6 @@ function SuccessModal({ teamName, ideaTitle, leaderName, onClose }) {
           <a className="btn-modal-primary" href={formURL} target="_blank" rel="noreferrer">
             <span>📤</span> Upload Files
           </a>
-          <button className="btn-modal-secondary" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
