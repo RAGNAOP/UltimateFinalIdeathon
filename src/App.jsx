@@ -281,7 +281,7 @@ export default function App() {
   const canRemove = members.length > 1;                        // 2 others min
 
   const addMember = () => {
-    if (isFull) { showToast(Maximum ${MAX_OTHER_MEMBERS} other members allowed., "error"); return; }
+    if (isFull) { showToast(`Maximum ${MAX_OTHER_MEMBERS} other members allowed.`, "error"); return; }
     setMembers(m => [...m, emptyMember()]);
   };
 
